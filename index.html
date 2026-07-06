@@ -121,20 +121,13 @@
     inset: 0;
     opacity: 0;
     transition: opacity .7s ease;
-    display: flex;
   }
   .carrusel-slide.activa { opacity: 1; }
   .carrusel-slide img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  @media (max-width: 700px) {
-    .carrusel-slide { flex-direction: column; }
   }
 
   .carrusel-flecha {
@@ -528,27 +521,14 @@ const DATOS = {
   ],
 
   /* ---------- PORTADA (carrusel de inicio) ----------
-     ✏️ EDITA AQUÍ: cada pantalla del carrusel puede tener 1 o 2 fotos.
-     con 2 fotos se ven lado a lado y se pierde mucha menos calidad
-     que estirando una sola foto vertical a toda la pantalla. */
+     ✏️ EDITA AQUÍ: fotos completas a pantalla completa que aparecen
+     al entrar. copia y pega bloques para agregar o quitar. */
   portada: [
-    {
-      fotos: [
-        { src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
-        { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
-      ],
-    },
-    {
-      fotos: [
-        { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
-        { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
-      ],
-    },
-    {
-      fotos: [
-        { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
-      ],
-    },
+    { src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
+    { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
+    { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
+    { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
+    { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
   ],
 
   /* ---------- TRABAJOS (el mosaico) ----------
@@ -686,16 +666,14 @@ const carrusel = { indice: 0 };
 const carruselSlides = document.getElementById("carruselSlides");
 const carruselTitulo = document.getElementById("carruselTitulo");
 
-DATOS.portada.forEach((pantalla, i) => {
+DATOS.portada.forEach((p, i) => {
   const slide = document.createElement("div");
   slide.className = "carrusel-slide" + (i === 0 ? " activa" : "");
-  pantalla.fotos.forEach(f => {
-    const img = document.createElement("img");
-    img.src = f.src;
-    img.alt = f.titulo || "";
-    img.loading = i === 0 ? "eager" : "lazy";
-    slide.appendChild(img);
-  });
+  const img = document.createElement("img");
+  img.src = p.src;
+  img.alt = p.titulo || "";
+  img.loading = i === 0 ? "eager" : "lazy";
+  slide.appendChild(img);
   carruselSlides.appendChild(slide);
 });
 
@@ -706,17 +684,9 @@ function irASlide(i) {
   document.querySelectorAll(".carrusel-slide").forEach((el, idx) =>
     el.classList.toggle("activa", idx === carrusel.indice)
   );
-  carruselTitulo.textContent = DATOS.portada[carrusel.indice].fotos
-    .map(f => f.titulo || "")
-    .filter(Boolean)
-    .join(" · ");
+  carruselTitulo.textContent = DATOS.portada[carrusel.indice].titulo || "";
 }
-if (DATOS.portada.length) {
-  carruselTitulo.textContent = DATOS.portada[0].fotos
-    .map(f => f.titulo || "")
-    .filter(Boolean)
-    .join(" · ");
-}
+if (DATOS.portada.length) carruselTitulo.textContent = DATOS.portada[0].titulo || "";
 
 const carruselEl = document.getElementById("carrusel");
 document.getElementById("flechaDer").addEventListener("click", e => {
