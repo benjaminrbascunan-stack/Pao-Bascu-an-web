@@ -99,6 +99,7 @@
   body.vista-inicio-activa { overflow: hidden; }
   body.vista-inicio-activa main { padding: 0; }
   body.vista-proyecto-activa main { padding: 0; }
+  body.vista-trabajo-activa main { padding: 0; }
 
   /* ============================================================
      VISTA: INICIO — carrusel de una foto a pantalla completa
@@ -168,19 +169,16 @@
   .mosaico {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2px;
-    max-width: 1400px;
-    margin: 0 auto;
+    gap: 0;
+    width: 100%;
   }
 
   .pieza {
     position: relative;
     display: block;
-    grid-column: span 1;
     overflow: hidden;
     background: #111;
   }
-  .pieza.ancho-completo { grid-column: 1 / -1; }
   a.pieza { cursor: pointer; }
   a.pieza:hover { opacity: 1; } /* anula el opacity:.5 general de los links */
 
@@ -190,7 +188,6 @@
     overflow: hidden;
     background: #111;
   }
-  .pieza.ancho-completo .marco { aspect-ratio: 21 / 9; }
 
   .pieza .marco img {
     width: 100%;
@@ -373,8 +370,6 @@
      ============================================================ */
   @media (max-width: 700px) {
     .mosaico { grid-template-columns: repeat(2, 1fr); }
-    .pieza.ancho-completo { grid-column: 1 / -1; }
-    .pieza.ancho-completo .marco { aspect-ratio: 4 / 5; }
     .titulo-hover { opacity: 1; background: none; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
     .acerca { grid-template-columns: 1fr; }
     main { padding: 90px 18px 60px; }
@@ -522,20 +517,20 @@ const DATOS = {
      PENDIENTE (marcador de posición mientras no hay material):
        { tipo: "pendiente", titulo: "nombre del proyecto" }
 
-     OPCIONAL: agrega  ancho: "completo"  para que la pieza ocupe
-     todo el ancho de la página (queda bien para destacar). */
+     todas las piezas se muestran del mismo tamaño en una grilla pareja
+     (3 columnas en pantallas grandes, 2 en el celular). para que la
+     última fila quede siempre completa y no se vea un espacio vacío,
+     conviene que el total de piezas sea múltiplo de 6. */
   trabajos: [
-    { tipo: "foto", src: "fotos/mariscos.jpg", titulo: "mariscos variados", ancho: "completo" },
+    { tipo: "foto", src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
     { tipo: "foto", src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
     { tipo: "foto", src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
     { tipo: "foto", src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
     { tipo: "foto", src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
-    { tipo: "pendiente", titulo: "proyecto seis" },
-    { tipo: "pendiente", titulo: "proyecto siete" },
-    { tipo: "pendiente", titulo: "proyecto ocho" },
+    { tipo: "pendiente", titulo: "próximo proyecto" },
 
     // ejemplo para agregar un video de vimeo:
-    // { tipo: "vimeo", id: "123456789", titulo: "comercial marca", ancho: "completo" },
+    // { tipo: "vimeo", id: "123456789", titulo: "comercial marca" },
   ],
 };
 
@@ -586,6 +581,7 @@ function mostrarVista() {
   document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
   document.getElementById("vista-" + destino).classList.add("activa");
   document.body.classList.toggle("vista-inicio-activa", destino === "inicio");
+  document.body.classList.toggle("vista-trabajo-activa", destino === "trabajo");
   document.body.classList.remove("vista-proyecto-activa");
   menu.querySelectorAll("a").forEach(a =>
     a.classList.toggle("activo", a.getAttribute("href") === "#" + destino)
@@ -627,6 +623,7 @@ function mostrarProyecto(slug) {
   document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
   document.getElementById("vista-proyecto").classList.add("activa");
   document.body.classList.remove("vista-inicio-activa");
+  document.body.classList.remove("vista-trabajo-activa");
   document.body.classList.add("vista-proyecto-activa");
   menu.querySelectorAll("a").forEach(a =>
     a.classList.toggle("activo", a.getAttribute("href") === "#trabajo")
@@ -699,7 +696,7 @@ const mosaico = document.getElementById("mosaico");
 DATOS.trabajos.forEach((t, i) => {
   const esClicable = t.tipo === "foto" || t.tipo === "vimeo";
   const pieza = document.createElement(esClicable ? "a" : "div");
-  pieza.className = "pieza" + (t.ancho === "completo" ? " ancho-completo" : "");
+  pieza.className = "pieza";
   if (esClicable) pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
 
   const marco = document.createElement("div");
