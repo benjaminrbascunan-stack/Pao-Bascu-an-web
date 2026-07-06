@@ -4,28 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>pao bascuñán</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&display=swap" rel="stylesheet">
 <style>
   /* ============================================================
-     ESTÉTICA GENERAL — blanco, arial, minúsculas, sin decoración
+     ESTÉTICA GENERAL — negro, geométrica, minúsculas, editorial
      ============================================================ */
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html { scroll-behavior: smooth; }
 
   body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: #fff;
-    color: #111;
-    font-size: 15px;
+    font-family: 'Jost', Arial, Helvetica, sans-serif;
+    background: #000;
+    color: #fff;
+    font-size: 16px;
     line-height: 1.5;
     text-transform: lowercase;
     -webkit-font-smoothing: antialiased;
   }
 
+  ::selection { background: #99ccff; color: #000; }
+
   a { color: inherit; text-decoration: none; }
   a:hover { opacity: .5; }
   a:focus-visible, button:focus-visible {
-    outline: 1px solid #111;
+    outline: 1px solid #fff;
     outline-offset: 3px;
   }
 
@@ -41,25 +46,26 @@
     padding: 24px 28px;
     z-index: 20;
     pointer-events: none; /* deja pasar el scroll, los hijos sí son clicables */
-    mix-blend-mode: normal;
   }
   header > * { pointer-events: auto; }
 
   .logo {
-    font-size: 17px;
+    font-size: 19px;
     letter-spacing: .02em;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
   }
 
   .menu-toggle {
     background: none;
     border: none;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 26px;
+    font-family: 'Jost', Arial, Helvetica, sans-serif;
+    font-size: 28px;
     line-height: 1;
     cursor: pointer;
     color: inherit;
     padding: 0 2px;
     font-weight: 300;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
   }
 
   /* ============================================================
@@ -67,7 +73,7 @@
      ============================================================ */
   nav {
     position: fixed;
-    top: 62px;
+    top: 64px;
     right: 28px;
     text-align: right;
     z-index: 20;
@@ -77,8 +83,9 @@
 
   nav a {
     display: block;
-    font-size: 17px;
+    font-size: 22px;
     line-height: 1.9;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
   }
   nav a.activo { opacity: .4; }
 
@@ -88,6 +95,71 @@
   main { padding: 100px 28px 80px; }
   .vista { display: none; }
   .vista.activa { display: block; }
+
+  body.vista-inicio-activa { overflow: hidden; }
+  body.vista-inicio-activa main { padding: 0; }
+
+  /* ============================================================
+     VISTA: INICIO — carrusel de una foto a pantalla completa
+     ============================================================ */
+  .carrusel {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .carrusel-slides { position: relative; width: 100%; height: 100%; }
+
+  .carrusel-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .7s ease;
+  }
+  .carrusel-slide.activa { opacity: 1; }
+  .carrusel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .carrusel-flecha {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 18%;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 42px;
+    font-family: 'Jost', Arial, sans-serif;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .3s;
+    z-index: 5;
+  }
+  .carrusel-flecha.izq { left: 0; text-align: left; padding-left: 18px; }
+  .carrusel-flecha.der { right: 0; text-align: right; padding-right: 18px; }
+  .carrusel:hover .carrusel-flecha { opacity: .55; }
+  .carrusel-flecha:hover { opacity: 1 !important; }
+
+  .carrusel-titulo {
+    position: absolute;
+    bottom: 28px;
+    left: 28px;
+    font-size: 14px;
+    color: #fff;
+    z-index: 5;
+    text-shadow: 0 1px 6px rgba(0,0,0,.5);
+  }
+
+  @media (hover: none) {
+    .carrusel-flecha { opacity: .55; }
+  }
 
   /* ============================================================
      VISTA: TRABAJO — mosaico vertical, se baja por él
@@ -103,20 +175,27 @@
   .pieza { grid-column: span 1; }
   .pieza.ancho-completo { grid-column: 1 / -1; }
 
-  .pieza .medio {
+  .pieza .marco {
     width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #111;
+  }
+  .pieza.ancho-completo .marco { aspect-ratio: 21 / 9; }
+
+  .pieza .marco img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
-    background: #f2f2f2;
   }
 
-  .pieza img.medio { height: auto; }
-
-  /* mantiene proporción 16:9 en los videos de vimeo */
+  /* mantiene proporción 16:9 en los videos de vimeo (no se recorta) */
   .video-marco {
     position: relative;
     width: 100%;
     padding-top: 56.25%;
-    background: #f2f2f2;
+    background: #111;
   }
   .video-marco iframe {
     position: absolute;
@@ -129,23 +208,23 @@
   .pieza .titulo-pieza {
     margin-top: 10px;
     font-size: 13px;
-    color: #555;
+    color: #999;
   }
 
   /* marcador de posición mientras no hay imágenes */
   .placeholder {
     width: 100%;
-    aspect-ratio: 4 / 5;
-    border: 1px dashed #bbb;
+    height: 100%;
+    border: 1px dashed #444;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: #666;
     font-size: 13px;
     text-align: center;
     padding: 20px;
   }
-  .pieza.ancho-completo .placeholder { aspect-ratio: 16 / 9; }
+  .pieza:not(.ancho-completo) .placeholder { aspect-ratio: 4 / 5; }
 
   /* ============================================================
      VISTA: ACERCA DE MÍ — título, texto y una foto
@@ -160,7 +239,7 @@
   }
   .acerca h1 {
     grid-column: 1 / -1;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: normal;
     margin-bottom: 8px;
   }
@@ -176,7 +255,7 @@
     margin: 0 auto;
   }
   .clientes h1 {
-    font-size: 17px;
+    font-size: 19px;
     font-weight: normal;
     margin-bottom: 28px;
   }
@@ -191,7 +270,7 @@
     margin: 0 auto;
   }
   .redes h1 {
-    font-size: 17px;
+    font-size: 19px;
     font-weight: normal;
     margin-bottom: 28px;
   }
@@ -199,8 +278,8 @@
     display: block;
     background: none;
     border: none;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 15px;
+    font-family: 'Jost', Arial, Helvetica, sans-serif;
+    font-size: 16px;
     text-transform: lowercase;
     color: inherit;
     cursor: pointer;
@@ -225,33 +304,45 @@
   @media (max-width: 700px) {
     .mosaico { grid-template-columns: 1fr; }
     .pieza, .pieza.ancho-completo { grid-column: 1 / -1; }
+    .pieza.ancho-completo .marco { aspect-ratio: 4 / 5; }
     .acerca { grid-template-columns: 1fr; }
     main { padding: 90px 18px 60px; }
     header { padding: 20px 18px; }
-    nav { right: 18px; top: 58px; }
+    nav { right: 18px; top: 60px; }
+    .carrusel-flecha { width: 24%; font-size: 34px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .aviso-copiado { transition: none; }
+    .aviso-copiado, .carrusel-slide { transition: none; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <a class="logo" href="#trabajo">pao bascuñán</a>
+  <a class="logo" href="#inicio">pao bascuñán</a>
   <button class="menu-toggle" id="menuToggle" aria-label="abrir menú" aria-expanded="false">+</button>
 </header>
 
 <nav id="menu">
-  <a href="#acerca">acerca de mí</a>
   <a href="#trabajo">trabajo</a>
+  <a href="#acerca">acerca de mí</a>
   <a href="#clientes">clientes</a>
   <a href="#encuentrame">encuéntrame</a>
 </nav>
 
 <main>
+
+  <!-- ══════════════════════ INICIO ══════════════════════ -->
+  <section class="vista" id="vista-inicio">
+    <div class="carrusel" id="carrusel">
+      <div class="carrusel-slides" id="carruselSlides"><!-- se llena desde DATOS.portada --></div>
+      <button class="carrusel-flecha izq" id="flechaIzq" aria-label="foto anterior">‹</button>
+      <button class="carrusel-flecha der" id="flechaDer" aria-label="foto siguiente">›</button>
+      <div class="carrusel-titulo" id="carruselTitulo"></div>
+    </div>
+  </section>
 
   <!-- ══════════════════════ TRABAJO ══════════════════════ -->
   <section class="vista" id="vista-trabajo">
@@ -329,6 +420,17 @@ const DATOS = {
     "cliente seis",
   ],
 
+  /* ---------- PORTADA (carrusel de inicio) ----------
+     ✏️ EDITA AQUÍ: fotos a pantalla completa que aparecen al entrar.
+     copia y pega bloques para agregar o quitar. */
+  portada: [
+    { src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
+    { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
+    { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
+    { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
+    { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
+  ],
+
   /* ---------- TRABAJOS (el mosaico) ----------
      ✏️ EDITA AQUÍ: cada trabajo es un bloque { ... }.
      copia y pega bloques para agregar más. hay 3 tipos:
@@ -345,21 +447,17 @@ const DATOS = {
      OPCIONAL: agrega  ancho: "completo"  para que la pieza ocupe
      todo el ancho de la página (queda bien para destacar). */
   trabajos: [
-    { tipo: "pendiente", titulo: "proyecto uno", ancho: "completo" },
-    { tipo: "pendiente", titulo: "proyecto dos" },
-    { tipo: "pendiente", titulo: "proyecto tres" },
-    { tipo: "pendiente", titulo: "proyecto cuatro" },
-    { tipo: "pendiente", titulo: "proyecto cinco" },
-    { tipo: "pendiente", titulo: "proyecto seis", ancho: "completo" },
+    { tipo: "foto", src: "fotos/mariscos.jpg", titulo: "mariscos variados", ancho: "completo" },
+    { tipo: "foto", src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
+    { tipo: "foto", src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
+    { tipo: "foto", src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
+    { tipo: "foto", src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
+    { tipo: "pendiente", titulo: "proyecto seis" },
     { tipo: "pendiente", titulo: "proyecto siete" },
     { tipo: "pendiente", titulo: "proyecto ocho" },
 
-    /* EJEMPLOS listos para copiar (borra los /* */ para activarlos):
-
-    { tipo: "foto",  src: "fotos/editorial-revista.jpg", titulo: "editorial revista" },
-    { tipo: "vimeo", id: "123456789", titulo: "comercial marca", ancho: "completo" },
-
-    */
+    // ejemplo para agregar un video de vimeo:
+    // { tipo: "vimeo", id: "123456789", titulo: "comercial marca", ancho: "completo" },
   ],
 };
 
@@ -386,19 +484,77 @@ menu.querySelectorAll("a").forEach(a =>
 
 /* ---------- navegación entre vistas (por hash, para que
      el botón "atrás" del navegador funcione) ---------- */
-const RUTAS = ["trabajo", "acerca", "clientes", "encuentrame"];
+const RUTAS = ["inicio", "trabajo", "acerca", "clientes", "encuentrame"];
 
 function mostrarVista() {
-  const ruta = location.hash.replace("#", "") || "trabajo";
-  const destino = RUTAS.includes(ruta) ? ruta : "trabajo";
+  const ruta = location.hash.replace("#", "") || "inicio";
+  const destino = RUTAS.includes(ruta) ? ruta : "inicio";
   document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
   document.getElementById("vista-" + destino).classList.add("activa");
+  document.body.classList.toggle("vista-inicio-activa", destino === "inicio");
   menu.querySelectorAll("a").forEach(a =>
     a.classList.toggle("activo", a.getAttribute("href") === "#" + destino)
   );
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", mostrarVista);
+
+/* ---------- carrusel de inicio ---------- */
+const carrusel = { indice: 0 };
+const carruselSlides = document.getElementById("carruselSlides");
+const carruselTitulo = document.getElementById("carruselTitulo");
+
+DATOS.portada.forEach((p, i) => {
+  const slide = document.createElement("div");
+  slide.className = "carrusel-slide" + (i === 0 ? " activa" : "");
+  const img = document.createElement("img");
+  img.src = p.src;
+  img.alt = p.titulo || "";
+  img.loading = i === 0 ? "eager" : "lazy";
+  slide.appendChild(img);
+  carruselSlides.appendChild(slide);
+});
+
+function irASlide(i) {
+  const total = DATOS.portada.length;
+  if (total === 0) return;
+  carrusel.indice = (i + total) % total;
+  document.querySelectorAll(".carrusel-slide").forEach((el, idx) =>
+    el.classList.toggle("activa", idx === carrusel.indice)
+  );
+  carruselTitulo.textContent = DATOS.portada[carrusel.indice].titulo || "";
+}
+if (DATOS.portada.length) carruselTitulo.textContent = DATOS.portada[0].titulo || "";
+
+const carruselEl = document.getElementById("carrusel");
+document.getElementById("flechaDer").addEventListener("click", e => {
+  e.stopPropagation();
+  irASlide(carrusel.indice + 1);
+});
+document.getElementById("flechaIzq").addEventListener("click", e => {
+  e.stopPropagation();
+  irASlide(carrusel.indice - 1);
+});
+carruselEl.addEventListener("click", e => {
+  const rect = carruselEl.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  x < rect.width / 2 ? irASlide(carrusel.indice - 1) : irASlide(carrusel.indice + 1);
+});
+
+document.addEventListener("keydown", e => {
+  if (!document.body.classList.contains("vista-inicio-activa")) return;
+  if (e.key === "ArrowRight") irASlide(carrusel.indice + 1);
+  if (e.key === "ArrowLeft") irASlide(carrusel.indice - 1);
+});
+
+let toqueInicioX = null;
+carruselEl.addEventListener("touchstart", e => { toqueInicioX = e.touches[0].clientX; });
+carruselEl.addEventListener("touchend", e => {
+  if (toqueInicioX === null) return;
+  const dx = e.changedTouches[0].clientX - toqueInicioX;
+  if (Math.abs(dx) > 40) dx < 0 ? irASlide(carrusel.indice + 1) : irASlide(carrusel.indice - 1);
+  toqueInicioX = null;
+});
 
 /* ---------- construir el mosaico de trabajos ---------- */
 const mosaico = document.getElementById("mosaico");
@@ -407,12 +563,14 @@ DATOS.trabajos.forEach(t => {
   pieza.className = "pieza" + (t.ancho === "completo" ? " ancho-completo" : "");
 
   if (t.tipo === "foto") {
+    const marco = document.createElement("div");
+    marco.className = "marco";
     const img = document.createElement("img");
-    img.className = "medio";
     img.src = t.src;
     img.alt = t.titulo || "";
     img.loading = "lazy";
-    pieza.appendChild(img);
+    marco.appendChild(img);
+    pieza.appendChild(marco);
   } else if (t.tipo === "vimeo") {
     const marco = document.createElement("div");
     marco.className = "video-marco";
@@ -424,10 +582,13 @@ DATOS.trabajos.forEach(t => {
     marco.appendChild(iframe);
     pieza.appendChild(marco);
   } else {
+    const marco = document.createElement("div");
+    marco.className = "marco";
     const ph = document.createElement("div");
     ph.className = "placeholder";
     ph.textContent = (t.titulo || "proyecto") + " — foto o video pendiente";
-    pieza.appendChild(ph);
+    marco.appendChild(ph);
+    pieza.appendChild(marco);
   }
 
   if (t.titulo) {
