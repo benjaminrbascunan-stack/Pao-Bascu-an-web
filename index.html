@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>pao bascuñán</title>
+<style>
+  /* ============================================================
+     ESTÉTICA GENERAL — blanco, arial, minúsculas, sin decoración
+     ============================================================ */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #fff;
+    color: #111;
+    font-size: 15px;
+    line-height: 1.5;
+    text-transform: lowercase;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  a:hover { opacity: .5; }
+  a:focus-visible, button:focus-visible {
+    outline: 1px solid #111;
+    outline-offset: 3px;
+  }
+
+  /* ============================================================
+     CABECERA FIJA — nombre a la izquierda, + / − a la derecha
+     ============================================================ */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 28px;
+    z-index: 20;
+    pointer-events: none; /* deja pasar el scroll, los hijos sí son clicables */
+    mix-blend-mode: normal;
+  }
+  header > * { pointer-events: auto; }
+
+  .logo {
+    font-size: 17px;
+    letter-spacing: .02em;
+  }
+
+  .menu-toggle {
+    background: none;
+    border: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+    padding: 0 2px;
+    font-weight: 300;
+  }
+
+  /* ============================================================
+     MENÚ DESPLEGABLE — lista alineada a la derecha, bajo el símbolo
+     ============================================================ */
+  nav {
+    position: fixed;
+    top: 62px;
+    right: 28px;
+    text-align: right;
+    z-index: 20;
+    display: none;
+  }
+  nav.abierto { display: block; }
+
+  nav a {
+    display: block;
+    font-size: 17px;
+    line-height: 1.9;
+  }
+  nav a.activo { opacity: .4; }
+
+  /* ============================================================
+     VISTAS (ventanas) — solo una visible a la vez
+     ============================================================ */
+  main { padding: 100px 28px 80px; }
+  .vista { display: none; }
+  .vista.activa { display: block; }
+
+  /* ============================================================
+     VISTA: TRABAJO — mosaico vertical, se baja por él
+     ============================================================ */
+  .mosaico {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px 28px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .pieza { grid-column: span 1; }
+  .pieza.ancho-completo { grid-column: 1 / -1; }
+
+  .pieza .medio {
+    width: 100%;
+    display: block;
+    background: #f2f2f2;
+  }
+
+  .pieza img.medio { height: auto; }
+
+  /* mantiene proporción 16:9 en los videos de vimeo */
+  .video-marco {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    background: #f2f2f2;
+  }
+  .video-marco iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .pieza .titulo-pieza {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #555;
+  }
+
+  /* marcador de posición mientras no hay imágenes */
+  .placeholder {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    border: 1px dashed #bbb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+  }
+  .pieza.ancho-completo .placeholder { aspect-ratio: 16 / 9; }
+
+  /* ============================================================
+     VISTA: ACERCA DE MÍ — título, texto y una foto
+     ============================================================ */
+  .acerca {
+    max-width: 980px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .acerca h1 {
+    grid-column: 1 / -1;
+    font-size: 17px;
+    font-weight: normal;
+    margin-bottom: 8px;
+  }
+  .acerca .texto p { margin-bottom: 1em; }
+  .acerca .foto img { width: 100%; display: block; }
+  .acerca .foto .placeholder { aspect-ratio: 3 / 4; }
+
+  /* ============================================================
+     VISTA: CLIENTES — lista simple en orden alfabético
+     ============================================================ */
+  .clientes {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .clientes h1 {
+    font-size: 17px;
+    font-weight: normal;
+    margin-bottom: 28px;
+  }
+  .clientes ul { list-style: none; }
+  .clientes li { line-height: 2; }
+
+  /* ============================================================
+     VISTA: ENCUÉNTRAME — links directos
+     ============================================================ */
+  .redes {
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .redes h1 {
+    font-size: 17px;
+    font-weight: normal;
+    margin-bottom: 28px;
+  }
+  .redes a, .redes button {
+    display: block;
+    background: none;
+    border: none;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    text-transform: lowercase;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    line-height: 2.2;
+    text-align: left;
+  }
+  .redes button:hover { opacity: .5; }
+  .aviso-copiado {
+    display: inline;
+    margin-left: 12px;
+    font-size: 13px;
+    color: #999;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .aviso-copiado.visible { opacity: 1; }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 700px) {
+    .mosaico { grid-template-columns: 1fr; }
+    .pieza, .pieza.ancho-completo { grid-column: 1 / -1; }
+    .acerca { grid-template-columns: 1fr; }
+    main { padding: 90px 18px 60px; }
+    header { padding: 20px 18px; }
+    nav { right: 18px; top: 58px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .aviso-copiado { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#trabajo">pao bascuñán</a>
+  <button class="menu-toggle" id="menuToggle" aria-label="abrir menú" aria-expanded="false">+</button>
+</header>
+
+<nav id="menu">
+  <a href="#acerca">acerca de mí</a>
+  <a href="#trabajo">trabajo</a>
+  <a href="#clientes">clientes</a>
+  <a href="#encuentrame">encuéntrame</a>
+</nav>
+
+<main>
+
+  <!-- ══════════════════════ TRABAJO ══════════════════════ -->
+  <section class="vista" id="vista-trabajo">
+    <div class="mosaico" id="mosaico"><!-- se llena desde DATOS.trabajos --></div>
+  </section>
+
+  <!-- ══════════════════════ ACERCA DE MÍ ══════════════════════ -->
+  <section class="vista" id="vista-acerca">
+    <div class="acerca">
+      <h1>acerca de mí</h1>
+      <div class="texto">
+        <!-- ✏️ EDITA AQUÍ: reemplaza estos párrafos con su biografía real -->
+        <p>pao bascuñán es food stylist con base en santiago de chile.</p>
+        <p>aquí va un texto sobre su trayectoria, su forma de trabajar y lo que
+        la inspira. puede ser tan corto o largo como quieran — dos o tres
+        párrafos suele ser suficiente.</p>
+        <p>también pueden mencionar publicaciones, exposiciones o colaboraciones
+        destacadas.</p>
+      </div>
+      <div class="foto">
+        <!-- ✏️ EDITA AQUÍ: cuando tengas la foto, borra el div.placeholder
+             y descomenta la línea de la imagen -->
+        <div class="placeholder">foto de pao<br>(retrato vertical)</div>
+        <!-- <img src="fotos/retrato.jpg" alt="retrato de pao bascuñán"> -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ CLIENTES ══════════════════════ -->
+  <section class="vista" id="vista-clientes">
+    <div class="clientes">
+      <h1>clientes</h1>
+      <ul id="listaClientes"><!-- se llena desde DATOS.clientes --></ul>
+    </div>
+  </section>
+
+  <!-- ══════════════════════ ENCUÉNTRAME ══════════════════════ -->
+  <section class="vista" id="vista-encuentrame">
+    <div class="redes">
+      <h1>encuéntrame</h1>
+      <a id="linkInstagram" target="_blank" rel="noopener">instagram</a>
+      <button id="btnCorreo">correo<span class="aviso-copiado" id="avisoCopiado">copiado ✓</span></button>
+      <a id="linkWhatsapp" target="_blank" rel="noopener">whatsapp</a>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   DATOS DEL SITIO — todo lo que hay que rellenar está aquí
+   ════════════════════════════════════════════════════════════════ */
+const DATOS = {
+
+  /* ---------- CONTACTO ---------- */
+  instagram: "https://www.instagram.com/pao_bascunan/",
+
+  // ✏️ EDITA AQUÍ: el correo real (al hacer clic se copia al portapapeles)
+  correo: "correo@ejemplo.com",
+
+  // ✏️ EDITA AQUÍA: número de whatsapp SIN "+" ni espacios.
+  // ejemplo chile: 56912345678
+  whatsapp: "56900000000",
+  mensajeWhatsapp: "hola pao! vi tu página y me gustaría conversar",
+
+  /* ---------- CLIENTES ----------
+     ✏️ EDITA AQUÍ: agrega o quita nombres entre comillas, separados
+     por comas. no importa el orden — se ordenan solos alfabéticamente. */
+  clientes: [
+    "cliente uno",
+    "cliente dos",
+    "cliente tres",
+    "cliente cuatro",
+    "cliente cinco",
+    "cliente seis",
+  ],
+
+  /* ---------- TRABAJOS (el mosaico) ----------
+     ✏️ EDITA AQUÍ: cada trabajo es un bloque { ... }.
+     copia y pega bloques para agregar más. hay 3 tipos:
+
+     FOTO:
+       { tipo: "foto", src: "fotos/nombre.jpg", titulo: "nombre del proyecto" }
+
+     VIDEO DE VIMEO (usa solo el número del video, ej: vimeo.com/123456789):
+       { tipo: "vimeo", id: "123456789", titulo: "nombre del proyecto" }
+
+     PENDIENTE (marcador de posición mientras no hay material):
+       { tipo: "pendiente", titulo: "nombre del proyecto" }
+
+     OPCIONAL: agrega  ancho: "completo"  para que la pieza ocupe
+     todo el ancho de la página (queda bien para destacar). */
+  trabajos: [
+    { tipo: "pendiente", titulo: "proyecto uno", ancho: "completo" },
+    { tipo: "pendiente", titulo: "proyecto dos" },
+    { tipo: "pendiente", titulo: "proyecto tres" },
+    { tipo: "pendiente", titulo: "proyecto cuatro" },
+    { tipo: "pendiente", titulo: "proyecto cinco" },
+    { tipo: "pendiente", titulo: "proyecto seis", ancho: "completo" },
+    { tipo: "pendiente", titulo: "proyecto siete" },
+    { tipo: "pendiente", titulo: "proyecto ocho" },
+
+    /* EJEMPLOS listos para copiar (borra los /* */ para activarlos):
+
+    { tipo: "foto",  src: "fotos/editorial-revista.jpg", titulo: "editorial revista" },
+    { tipo: "vimeo", id: "123456789", titulo: "comercial marca", ancho: "completo" },
+
+    */
+  ],
+};
+
+/* ════════════════════════════════════════════════════════════════
+   A PARTIR DE AQUÍ NO HACE FALTA TOCAR NADA
+   ════════════════════════════════════════════════════════════════ */
+
+/* ---------- menú desplegable (+ / −) ---------- */
+const toggle = document.getElementById("menuToggle");
+const menu = document.getElementById("menu");
+
+function fijarMenu(abierto) {
+  menu.classList.toggle("abierto", abierto);
+  toggle.textContent = abierto ? "−" : "+";
+  toggle.setAttribute("aria-expanded", abierto);
+  toggle.setAttribute("aria-label", abierto ? "cerrar menú" : "abrir menú");
+}
+toggle.addEventListener("click", () => fijarMenu(!menu.classList.contains("abierto")));
+
+/* al elegir una opción, el menú se cierra */
+menu.querySelectorAll("a").forEach(a =>
+  a.addEventListener("click", () => fijarMenu(false))
+);
+
+/* ---------- navegación entre vistas (por hash, para que
+     el botón "atrás" del navegador funcione) ---------- */
+const RUTAS = ["trabajo", "acerca", "clientes", "encuentrame"];
+
+function mostrarVista() {
+  const ruta = location.hash.replace("#", "") || "trabajo";
+  const destino = RUTAS.includes(ruta) ? ruta : "trabajo";
+  document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
+  document.getElementById("vista-" + destino).classList.add("activa");
+  menu.querySelectorAll("a").forEach(a =>
+    a.classList.toggle("activo", a.getAttribute("href") === "#" + destino)
+  );
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", mostrarVista);
+
+/* ---------- construir el mosaico de trabajos ---------- */
+const mosaico = document.getElementById("mosaico");
+DATOS.trabajos.forEach(t => {
+  const pieza = document.createElement("figure");
+  pieza.className = "pieza" + (t.ancho === "completo" ? " ancho-completo" : "");
+
+  if (t.tipo === "foto") {
+    const img = document.createElement("img");
+    img.className = "medio";
+    img.src = t.src;
+    img.alt = t.titulo || "";
+    img.loading = "lazy";
+    pieza.appendChild(img);
+  } else if (t.tipo === "vimeo") {
+    const marco = document.createElement("div");
+    marco.className = "video-marco";
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://player.vimeo.com/video/" + t.id + "?title=0&byline=0&portrait=0";
+    iframe.allow = "autoplay; fullscreen; picture-in-picture";
+    iframe.loading = "lazy";
+    iframe.title = t.titulo || "video";
+    marco.appendChild(iframe);
+    pieza.appendChild(marco);
+  } else {
+    const ph = document.createElement("div");
+    ph.className = "placeholder";
+    ph.textContent = (t.titulo || "proyecto") + " — foto o video pendiente";
+    pieza.appendChild(ph);
+  }
+
+  if (t.titulo) {
+    const cap = document.createElement("figcaption");
+    cap.className = "titulo-pieza";
+    cap.textContent = t.titulo;
+    pieza.appendChild(cap);
+  }
+  mosaico.appendChild(pieza);
+});
+
+/* ---------- clientes en orden alfabético (automático) ---------- */
+const lista = document.getElementById("listaClientes");
+[...DATOS.clientes]
+  .sort((a, b) => a.localeCompare(b, "es"))
+  .forEach(nombre => {
+    const li = document.createElement("li");
+    li.textContent = nombre;
+    lista.appendChild(li);
+  });
+
+/* ---------- encuéntrame ---------- */
+document.getElementById("linkInstagram").href = DATOS.instagram;
+document.getElementById("linkWhatsapp").href =
+  "https://wa.me/" + DATOS.whatsapp + "?text=" + encodeURIComponent(DATOS.mensajeWhatsapp);
+
+const aviso = document.getElementById("avisoCopiado");
+document.getElementById("btnCorreo").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(DATOS.correo);
+  } catch {
+    /* respaldo para navegadores antiguos */
+    const tmp = document.createElement("textarea");
+    tmp.value = DATOS.correo;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand("copy");
+    tmp.remove();
+  }
+  aviso.classList.add("visible");
+  setTimeout(() => aviso.classList.remove("visible"), 2000);
+});
+
+/* vista inicial */
+mostrarVista();
+</script>
+</body>
+</html>
