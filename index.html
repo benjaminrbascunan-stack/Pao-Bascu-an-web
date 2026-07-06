@@ -121,6 +121,7 @@
     inset: 0;
     opacity: 0;
     transition: opacity .7s ease;
+    display: flex;
   }
   .carrusel-slide.activa { opacity: 1; }
   .carrusel-slide img {
@@ -128,6 +129,12 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  @media (max-width: 700px) {
+    .carrusel-slide { flex-direction: column; }
   }
 
   .carrusel-flecha {
@@ -328,6 +335,7 @@
   }
   .clientes ul { list-style: none; }
   .clientes li { line-height: 1.35; }
+  .clientes li::before { content: "- "; }
 
   /* ============================================================
      VISTA: ENCUÉNTRAME — links directos
@@ -431,13 +439,20 @@
     <div class="acerca">
       <h1>acerca de mí</h1>
       <div class="texto">
-        <!-- ✏️ EDITA AQUÍ: reemplaza estos párrafos con su biografía real -->
-        <p>pao bascuñán es food stylist con base en santiago de chile.</p>
-        <p>aquí va un texto sobre su trayectoria, su forma de trabajar y lo que
-        la inspira. puede ser tan corto o largo como quieran — dos o tres
-        párrafos suele ser suficiente.</p>
-        <p>también pueden mencionar publicaciones, exposiciones o colaboraciones
-        destacadas.</p>
+        <p>siempre he creído que la comida tiene la capacidad de contar historias
+        antes de que alguien pruebe el primer bocado. esa convicción ha guiado mi
+        camino durante más de 30 años como food stylist, transformando ideas en
+        imágenes que despiertan emociones y hacen que cada alimento se vea
+        auténtico, atractivo e irresistible frente a la cámara.</p>
+        <p>a lo largo de mi carrera he colaborado con productoras, agencias,
+        fotógrafos, directores y marcas en proyectos de publicidad, fotografía y
+        producciones audiovisuales. cada experiencia me ha enseñado que detrás de
+        una gran imagen hay un trabajo silencioso, hecho con paciencia, técnica,
+        creatividad y dedicación.</p>
+        <p>para mí, el food styling es el encuentro entre la gastronomía y la
+        narrativa visual. no se trata solo de hacer que un plato se vea bonito,
+        sino de construir una historia, despertar el apetito y conectar
+        emocionalmente con quien observa la imagen.</p>
       </div>
       <div class="foto">
         <!-- ✏️ EDITA AQUÍ: cuando tengas la foto, borra el div.placeholder
@@ -478,7 +493,7 @@ const DATOS = {
   instagram: "https://www.instagram.com/pao_bascunan/",
 
   // ✏️ EDITA AQUÍ: el correo real (al hacer clic se copia al portapapeles)
-  correo: "correo@ejemplo.com",
+  correo: "paolabascunan@gmail.com",
 
   // ✏️ EDITA AQUÍA: número de whatsapp SIN "+" ni espacios.
   // ejemplo chile: 56912345678
@@ -513,14 +528,27 @@ const DATOS = {
   ],
 
   /* ---------- PORTADA (carrusel de inicio) ----------
-     ✏️ EDITA AQUÍ: fotos a pantalla completa que aparecen al entrar.
-     copia y pega bloques para agregar o quitar. */
+     ✏️ EDITA AQUÍ: cada pantalla del carrusel puede tener 1 o 2 fotos.
+     con 2 fotos se ven lado a lado y se pierde mucha menos calidad
+     que estirando una sola foto vertical a toda la pantalla. */
   portada: [
-    { src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
-    { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
-    { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
-    { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
-    { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
+    {
+      fotos: [
+        { src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
+        { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
+      ],
+    },
+    {
+      fotos: [
+        { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
+        { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
+      ],
+    },
+    {
+      fotos: [
+        { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
+      ],
+    },
   ],
 
   /* ---------- TRABAJOS (el mosaico) ----------
@@ -658,14 +686,16 @@ const carrusel = { indice: 0 };
 const carruselSlides = document.getElementById("carruselSlides");
 const carruselTitulo = document.getElementById("carruselTitulo");
 
-DATOS.portada.forEach((p, i) => {
+DATOS.portada.forEach((pantalla, i) => {
   const slide = document.createElement("div");
   slide.className = "carrusel-slide" + (i === 0 ? " activa" : "");
-  const img = document.createElement("img");
-  img.src = p.src;
-  img.alt = p.titulo || "";
-  img.loading = i === 0 ? "eager" : "lazy";
-  slide.appendChild(img);
+  pantalla.fotos.forEach(f => {
+    const img = document.createElement("img");
+    img.src = f.src;
+    img.alt = f.titulo || "";
+    img.loading = i === 0 ? "eager" : "lazy";
+    slide.appendChild(img);
+  });
   carruselSlides.appendChild(slide);
 });
 
@@ -676,9 +706,17 @@ function irASlide(i) {
   document.querySelectorAll(".carrusel-slide").forEach((el, idx) =>
     el.classList.toggle("activa", idx === carrusel.indice)
   );
-  carruselTitulo.textContent = DATOS.portada[carrusel.indice].titulo || "";
+  carruselTitulo.textContent = DATOS.portada[carrusel.indice].fotos
+    .map(f => f.titulo || "")
+    .filter(Boolean)
+    .join(" · ");
 }
-if (DATOS.portada.length) carruselTitulo.textContent = DATOS.portada[0].titulo || "";
+if (DATOS.portada.length) {
+  carruselTitulo.textContent = DATOS.portada[0].fotos
+    .map(f => f.titulo || "")
+    .filter(Boolean)
+    .join(" · ");
+}
 
 const carruselEl = document.getElementById("carrusel");
 document.getElementById("flechaDer").addEventListener("click", e => {
