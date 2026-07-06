@@ -98,6 +98,7 @@
 
   body.vista-inicio-activa { overflow: hidden; }
   body.vista-inicio-activa main { padding: 0; }
+  body.vista-proyecto-activa main { padding: 0; }
 
   /* ============================================================
      VISTA: INICIO — carrusel de una foto a pantalla completa
@@ -162,22 +163,30 @@
   }
 
   /* ============================================================
-     VISTA: TRABAJO — mosaico vertical, se baja por él
+     VISTA: TRABAJO — mosaico tipo grilla, título aparece en hover
      ============================================================ */
   .mosaico {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 40px 28px;
-    max-width: 1200px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    max-width: 1400px;
     margin: 0 auto;
   }
 
-  .pieza { grid-column: span 1; }
+  .pieza {
+    position: relative;
+    display: block;
+    grid-column: span 1;
+    overflow: hidden;
+    background: #111;
+  }
   .pieza.ancho-completo { grid-column: 1 / -1; }
+  a.pieza { cursor: pointer; }
+  a.pieza:hover { opacity: 1; } /* anula el opacity:.5 general de los links */
 
   .pieza .marco {
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
     background: #111;
   }
@@ -188,7 +197,9 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    transition: transform .5s ease;
   }
+  a.pieza:hover .marco img { transform: scale(1.03); }
 
   /* mantiene proporción 16:9 en los videos de vimeo (no se recorta) */
   .video-marco {
@@ -205,11 +216,38 @@
     border: 0;
   }
 
-  .pieza .titulo-pieza {
-    margin-top: 10px;
-    font-size: 13px;
-    color: #999;
+  /* miniatura de video dentro de la grilla (el video real se ve al entrar al proyecto) */
+  .miniatura-video {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
   }
+  .triangulo-play {
+    width: 0; height: 0;
+    border-left: 18px solid #fff;
+    border-top: 11px solid transparent;
+    border-bottom: 11px solid transparent;
+    opacity: .8;
+    margin-left: 4px;
+  }
+
+  /* título que aparece solo al pasar el mouse sobre la pieza */
+  .titulo-hover {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 10px 12px 8px;
+    font-size: 12px;
+    color: #fff;
+    background: linear-gradient(to top, rgba(0,0,0,.65), rgba(0,0,0,0));
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+  }
+  .pieza:hover .titulo-hover,
+  .pieza:focus-visible .titulo-hover { opacity: 1; }
 
   /* marcador de posición mientras no hay imágenes */
   .placeholder {
@@ -224,7 +262,39 @@
     text-align: center;
     padding: 20px;
   }
-  .pieza:not(.ancho-completo) .placeholder { aspect-ratio: 4 / 5; }
+
+  /* ============================================================
+     VISTA: PROYECTO — detalle de un trabajo individual
+     ============================================================ */
+  .proyecto-detalle img,
+  .proyecto-detalle .video-marco {
+    width: 100%;
+    display: block;
+  }
+  .proyecto-titulo {
+    position: fixed;
+    bottom: 26px;
+    left: 28px;
+    font-size: 14px;
+    color: #fff;
+    z-index: 15;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6);
+  }
+  .proyecto-cerrar {
+    position: fixed;
+    bottom: 20px;
+    right: 26px;
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 300;
+    font-family: 'Jost', Arial, sans-serif;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    z-index: 15;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6);
+  }
 
   /* ============================================================
      VISTA: ACERCA DE MÍ — título, texto y una foto
@@ -302,9 +372,10 @@
      RESPONSIVE
      ============================================================ */
   @media (max-width: 700px) {
-    .mosaico { grid-template-columns: 1fr; }
-    .pieza, .pieza.ancho-completo { grid-column: 1 / -1; }
+    .mosaico { grid-template-columns: repeat(2, 1fr); }
+    .pieza.ancho-completo { grid-column: 1 / -1; }
     .pieza.ancho-completo .marco { aspect-ratio: 4 / 5; }
+    .titulo-hover { opacity: 1; background: none; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
     .acerca { grid-template-columns: 1fr; }
     main { padding: 90px 18px 60px; }
     header { padding: 20px 18px; }
@@ -347,6 +418,13 @@
   <!-- ══════════════════════ TRABAJO ══════════════════════ -->
   <section class="vista" id="vista-trabajo">
     <div class="mosaico" id="mosaico"><!-- se llena desde DATOS.trabajos --></div>
+  </section>
+
+  <!-- ══════════════════════ PROYECTO (detalle individual) ══════════════════════ -->
+  <section class="vista" id="vista-proyecto">
+    <div class="proyecto-detalle" id="proyectoDetalle"><!-- se llena al hacer click en un trabajo --></div>
+    <div class="proyecto-titulo" id="proyectoTitulo"></div>
+    <button class="proyecto-cerrar" id="proyectoCerrar" aria-label="volver a trabajo">×</button>
   </section>
 
   <!-- ══════════════════════ ACERCA DE MÍ ══════════════════════ -->
@@ -485,19 +563,79 @@ menu.querySelectorAll("a").forEach(a =>
 /* ---------- navegación entre vistas (por hash, para que
      el botón "atrás" del navegador funcione) ---------- */
 const RUTAS = ["inicio", "trabajo", "acerca", "clientes", "encuentrame"];
+const PREFIJO_PROYECTO = "proyecto-";
+
+function crearSlug(t, i) {
+  const base = (t.titulo || ("proyecto " + i))
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return base || ("proyecto-" + i);
+}
 
 function mostrarVista() {
-  const ruta = location.hash.replace("#", "") || "inicio";
-  const destino = RUTAS.includes(ruta) ? ruta : "inicio";
+  const rutaCruda = location.hash.replace("#", "") || "inicio";
+
+  if (rutaCruda.startsWith(PREFIJO_PROYECTO)) {
+    mostrarProyecto(rutaCruda.slice(PREFIJO_PROYECTO.length));
+    return;
+  }
+
+  const destino = RUTAS.includes(rutaCruda) ? rutaCruda : "inicio";
   document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
   document.getElementById("vista-" + destino).classList.add("activa");
   document.body.classList.toggle("vista-inicio-activa", destino === "inicio");
+  document.body.classList.remove("vista-proyecto-activa");
   menu.querySelectorAll("a").forEach(a =>
     a.classList.toggle("activo", a.getAttribute("href") === "#" + destino)
   );
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", mostrarVista);
+
+/* ---------- vista de proyecto individual ---------- */
+function mostrarProyecto(slug) {
+  const indice = DATOS.trabajos.findIndex((t, i) => crearSlug(t, i) === slug);
+  const t = DATOS.trabajos[indice];
+  if (!t || (t.tipo !== "foto" && t.tipo !== "vimeo")) {
+    location.hash = "#trabajo";
+    return;
+  }
+
+  const detalle = document.getElementById("proyectoDetalle");
+  detalle.innerHTML = "";
+
+  if (t.tipo === "foto") {
+    const img = document.createElement("img");
+    img.src = t.src;
+    img.alt = t.titulo || "";
+    detalle.appendChild(img);
+  } else {
+    const marco = document.createElement("div");
+    marco.className = "video-marco";
+    const iframe = document.createElement("iframe");
+    iframe.src = "https://player.vimeo.com/video/" + t.id + "?title=0&byline=0&portrait=0";
+    iframe.allow = "autoplay; fullscreen; picture-in-picture";
+    iframe.title = t.titulo || "video";
+    marco.appendChild(iframe);
+    detalle.appendChild(marco);
+  }
+
+  document.getElementById("proyectoTitulo").textContent = t.titulo || "";
+
+  document.querySelectorAll(".vista").forEach(v => v.classList.remove("activa"));
+  document.getElementById("vista-proyecto").classList.add("activa");
+  document.body.classList.remove("vista-inicio-activa");
+  document.body.classList.add("vista-proyecto-activa");
+  menu.querySelectorAll("a").forEach(a =>
+    a.classList.toggle("activo", a.getAttribute("href") === "#trabajo")
+  );
+  window.scrollTo(0, 0);
+}
+document.getElementById("proyectoCerrar").addEventListener("click", () => {
+  location.hash = "#trabajo";
+});
 
 /* ---------- carrusel de inicio ---------- */
 const carrusel = { indice: 0 };
@@ -558,42 +696,37 @@ carruselEl.addEventListener("touchend", e => {
 
 /* ---------- construir el mosaico de trabajos ---------- */
 const mosaico = document.getElementById("mosaico");
-DATOS.trabajos.forEach(t => {
-  const pieza = document.createElement("figure");
+DATOS.trabajos.forEach((t, i) => {
+  const esClicable = t.tipo === "foto" || t.tipo === "vimeo";
+  const pieza = document.createElement(esClicable ? "a" : "div");
   pieza.className = "pieza" + (t.ancho === "completo" ? " ancho-completo" : "");
+  if (esClicable) pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
+
+  const marco = document.createElement("div");
+  marco.className = "marco";
 
   if (t.tipo === "foto") {
-    const marco = document.createElement("div");
-    marco.className = "marco";
     const img = document.createElement("img");
     img.src = t.src;
     img.alt = t.titulo || "";
     img.loading = "lazy";
     marco.appendChild(img);
-    pieza.appendChild(marco);
   } else if (t.tipo === "vimeo") {
-    const marco = document.createElement("div");
-    marco.className = "video-marco";
-    const iframe = document.createElement("iframe");
-    iframe.src = "https://player.vimeo.com/video/" + t.id + "?title=0&byline=0&portrait=0";
-    iframe.allow = "autoplay; fullscreen; picture-in-picture";
-    iframe.loading = "lazy";
-    iframe.title = t.titulo || "video";
-    marco.appendChild(iframe);
-    pieza.appendChild(marco);
+    const miniatura = document.createElement("div");
+    miniatura.className = "miniatura-video";
+    miniatura.innerHTML = '<span class="triangulo-play"></span>';
+    marco.appendChild(miniatura);
   } else {
-    const marco = document.createElement("div");
-    marco.className = "marco";
     const ph = document.createElement("div");
     ph.className = "placeholder";
     ph.textContent = (t.titulo || "proyecto") + " — foto o video pendiente";
     marco.appendChild(ph);
-    pieza.appendChild(marco);
   }
+  pieza.appendChild(marco);
 
-  if (t.titulo) {
-    const cap = document.createElement("figcaption");
-    cap.className = "titulo-pieza";
+  if (t.titulo && esClicable) {
+    const cap = document.createElement("span");
+    cap.className = "titulo-hover";
     cap.textContent = t.titulo;
     pieza.appendChild(cap);
   }
