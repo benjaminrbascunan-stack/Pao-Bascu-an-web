@@ -234,6 +234,21 @@
     margin-left: 4px;
   }
 
+  /* miniatura de publicación de instagram dentro de la grilla */
+  .miniatura-instagram {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    color: #666;
+    font-size: 13px;
+  }
+
+  /* el embed real de instagram en la vista de proyecto */
+  .proyecto-detalle .instagram-media { margin: 0 auto !important; }
+
   /* título que aparece solo al pasar el mouse sobre la pieza */
   .titulo-hover {
     position: absolute;
@@ -391,6 +406,7 @@
     .aviso-copiado, .carrusel-slide { transition: none; }
   }
 </style>
+<script async src="https://www.instagram.com/embed.js"></script>
 </head>
 <body>
 
@@ -544,6 +560,10 @@ const DATOS = {
      VIDEO DE VIMEO (usa solo el número del video, ej: vimeo.com/123456789):
        { tipo: "vimeo", id: "123456789", titulo: "nombre del proyecto" }
 
+     PUBLICACIÓN DE INSTAGRAM (usa solo el código, el que aparece
+     después de /p/ en el link, ej: instagram.com/p/ABC123xyz/):
+       { tipo: "instagram", id: "ABC123xyz", titulo: "nombre del proyecto" }
+
      PENDIENTE (marcador de posición mientras no hay material):
        { tipo: "pendiente", titulo: "nombre del proyecto" }
 
@@ -557,6 +577,28 @@ const DATOS = {
     { tipo: "foto", src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
     { tipo: "foto", src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
     { tipo: "foto", src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
+
+    // ✏️ EDITA AQUÍ: reemplaza estos títulos genéricos por el nombre real de cada comercial
+    { tipo: "vimeo", id: "770805630", titulo: "comercial 01" },
+    { tipo: "vimeo", id: "770805118", titulo: "comercial 02" },
+    { tipo: "vimeo", id: "755689126", titulo: "comercial 03" },
+    { tipo: "vimeo", id: "707877248", titulo: "comercial 04" },
+    { tipo: "vimeo", id: "291187340", titulo: "comercial 05" },
+    { tipo: "vimeo", id: "291186871", titulo: "comercial 06" },
+    { tipo: "vimeo", id: "268395021", titulo: "comercial 07" },
+    { tipo: "vimeo", id: "246134390", titulo: "comercial 08" },
+    { tipo: "vimeo", id: "246134271", titulo: "comercial 09" },
+    { tipo: "vimeo", id: "192005085", titulo: "comercial 10" },
+    { tipo: "vimeo", id: "558255192", titulo: "comercial 11" },
+    { tipo: "vimeo", id: "558254714", titulo: "comercial 12" },
+    { tipo: "vimeo", id: "558254564", titulo: "comercial 13" },
+    { tipo: "vimeo", id: "558254444", titulo: "comercial 14" },
+
+    { tipo: "instagram", id: "DXHq81HR2Ax", titulo: "publicación 01" },
+    { tipo: "instagram", id: "DXHrzrrxL9A", titulo: "publicación 02" },
+    { tipo: "instagram", id: "DXHrMFslLr8", titulo: "publicación 03" },
+    { tipo: "instagram", id: "DXHsI9lx08a", titulo: "publicación 04" },
+
     { tipo: "pendiente", titulo: "próximo proyecto" },
 
     // ejemplo para agregar un video de vimeo:
@@ -621,10 +663,21 @@ function mostrarVista() {
 window.addEventListener("hashchange", mostrarVista);
 
 /* ---------- vista de proyecto individual ---------- */
+const TIPOS_CLICABLES = ["foto", "vimeo", "instagram"];
+
+function procesarEmbedsInstagram(intentos) {
+  if (intentos === undefined) intentos = 0;
+  if (window.instgrm && window.instgrm.Embeds) {
+    window.instgrm.Embeds.process();
+  } else if (intentos < 15) {
+    setTimeout(() => procesarEmbedsInstagram(intentos + 1), 300);
+  }
+}
+
 function mostrarProyecto(slug) {
   const indice = DATOS.trabajos.findIndex((t, i) => crearSlug(t, i) === slug);
   const t = DATOS.trabajos[indice];
-  if (!t || (t.tipo !== "foto" && t.tipo !== "vimeo")) {
+  if (!t || !TIPOS_CLICABLES.includes(t.tipo)) {
     location.hash = "#trabajo";
     return;
   }
@@ -637,7 +690,7 @@ function mostrarProyecto(slug) {
     img.src = t.src;
     img.alt = t.titulo || "";
     detalle.appendChild(img);
-  } else {
+  } else if (t.tipo === "vimeo") {
     const marco = document.createElement("div");
     marco.className = "video-marco";
     const iframe = document.createElement("iframe");
@@ -646,6 +699,11 @@ function mostrarProyecto(slug) {
     iframe.title = t.titulo || "video";
     marco.appendChild(iframe);
     detalle.appendChild(marco);
+  } else if (t.tipo === "instagram") {
+    detalle.innerHTML =
+      '<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/' +
+      t.id + '/" data-instgrm-version="14"></blockquote>';
+    procesarEmbedsInstagram();
   }
 
   document.getElementById("proyectoTitulo").textContent = t.titulo || "";
@@ -724,7 +782,7 @@ carruselEl.addEventListener("touchend", e => {
 /* ---------- construir el mosaico de trabajos ---------- */
 const mosaico = document.getElementById("mosaico");
 DATOS.trabajos.forEach((t, i) => {
-  const esClicable = t.tipo === "foto" || t.tipo === "vimeo";
+  const esClicable = t.tipo === "foto" || t.tipo === "vimeo" || t.tipo === "instagram";
   const pieza = document.createElement(esClicable ? "a" : "div");
   pieza.className = "pieza";
   if (esClicable) pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
@@ -742,6 +800,11 @@ DATOS.trabajos.forEach((t, i) => {
     const miniatura = document.createElement("div");
     miniatura.className = "miniatura-video";
     miniatura.innerHTML = '<span class="triangulo-play"></span>';
+    marco.appendChild(miniatura);
+  } else if (t.tipo === "instagram") {
+    const miniatura = document.createElement("div");
+    miniatura.className = "miniatura-instagram";
+    miniatura.textContent = "instagram";
     marco.appendChild(miniatura);
   } else {
     const ph = document.createElement("div");
