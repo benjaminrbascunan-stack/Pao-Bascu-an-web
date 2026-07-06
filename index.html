@@ -327,7 +327,7 @@
     margin-bottom: 28px;
   }
   .clientes ul { list-style: none; }
-  .clientes li { line-height: 2; }
+  .clientes li { line-height: 1.35; }
 
   /* ============================================================
      VISTA: ENCUÉNTRAME — links directos
@@ -351,8 +351,11 @@
     color: inherit;
     cursor: pointer;
     padding: 0;
-    line-height: 2.2;
+    line-height: 1.35;
     text-align: left;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(255, 255, 255, .35);
   }
   .redes button:hover { opacity: .5; }
   .aviso-copiado {
@@ -362,6 +365,7 @@
     color: #999;
     opacity: 0;
     transition: opacity .3s;
+    text-decoration: none;
   }
   .aviso-copiado.visible { opacity: 1; }
 
@@ -456,9 +460,9 @@
   <section class="vista" id="vista-encuentrame">
     <div class="redes">
       <h1>encuéntrame</h1>
-      <a id="linkInstagram" target="_blank" rel="noopener">instagram</a>
-      <button id="btnCorreo">correo<span class="aviso-copiado" id="avisoCopiado">copiado ✓</span></button>
-      <a id="linkWhatsapp" target="_blank" rel="noopener">whatsapp</a>
+      <a id="linkInstagram" target="_blank" rel="noopener"></a>
+      <button id="btnCorreo"><span id="textoCorreo"></span><span class="aviso-copiado" id="avisoCopiado">copiado ✓</span></button>
+      <a id="linkWhatsapp" target="_blank" rel="noopener"></a>
     </div>
   </section>
 
@@ -755,10 +759,21 @@ const lista = document.getElementById("listaClientes");
     lista.appendChild(li);
   });
 
-/* ---------- encuéntrame ---------- */
-document.getElementById("linkInstagram").href = DATOS.instagram;
-document.getElementById("linkWhatsapp").href =
+/* ---------- encuéntrame (se muestran los links reales, no etiquetas genéricas) ---------- */
+const linkInstagram = document.getElementById("linkInstagram");
+linkInstagram.href = DATOS.instagram;
+linkInstagram.textContent = DATOS.instagram.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
+
+function formatearWhatsapp(numero) {
+  const m = numero.match(/^56(9)(\d{4})(\d{4})$/);
+  return m ? ("+56 " + m[1] + " " + m[2] + " " + m[3]) : ("+" + numero);
+}
+const linkWhatsapp = document.getElementById("linkWhatsapp");
+linkWhatsapp.href =
   "https://wa.me/" + DATOS.whatsapp + "?text=" + encodeURIComponent(DATOS.mensajeWhatsapp);
+linkWhatsapp.textContent = formatearWhatsapp(DATOS.whatsapp);
+
+document.getElementById("textoCorreo").textContent = DATOS.correo;
 
 const aviso = document.getElementById("avisoCopiado");
 document.getElementById("btnCorreo").addEventListener("click", async () => {
