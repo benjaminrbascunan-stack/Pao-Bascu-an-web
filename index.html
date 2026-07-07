@@ -322,8 +322,7 @@
     margin-bottom: 28px;
   }
   .clientes ul { list-style: none; }
-  .clientes li { line-height: 1.35; }
-  .clientes li::before { content: "- "; }
+  .clientes li { line-height: 1.35; font-size: 300%; }
 
   /* ============================================================
      VISTA: ENCUÉNTRAME — links directos
@@ -622,6 +621,8 @@ function mostrarVista() {
   document.body.classList.toggle("vista-inicio-activa", destino === "inicio");
   document.body.classList.toggle("vista-trabajo-activa", destino === "trabajo");
   document.body.classList.remove("vista-proyecto-activa");
+  // saca el iframe/imagen del proyecto para que un video no siga sonando de fondo
+  document.getElementById("proyectoDetalle").innerHTML = "";
   menu.querySelectorAll("a").forEach(a =>
     a.classList.toggle("activo", a.getAttribute("href") === "#" + destino)
   );
