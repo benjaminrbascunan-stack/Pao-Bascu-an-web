@@ -216,25 +216,22 @@
     border: 0;
   }
 
-  /* miniatura de video dentro de la grilla (el video real se ve al entrar al proyecto) */
+  /* miniatura de video dentro de la grilla (imagen real del video, el video se ve al entrar al proyecto).
+     si vimeo no entrega miniatura (video restringido por dominio) queda esta caja con el texto "video". */
   .miniatura-video {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #111;
-  }
-  .triangulo-play {
-    width: 0; height: 0;
-    border-left: 18px solid #fff;
-    border-top: 11px solid transparent;
-    border-bottom: 11px solid transparent;
-    opacity: .8;
-    margin-left: 4px;
+    background-color: #111;
+    background-size: cover;
+    background-position: center;
+    color: #666;
+    font-size: 13px;
   }
 
-  /* miniatura de publicación de instagram dentro de la grilla */
+  /* miniatura de publicación de instagram dentro de la grilla (abre instagram directo) */
   .miniatura-instagram {
     width: 100%;
     height: 100%;
@@ -245,9 +242,6 @@
     color: #666;
     font-size: 13px;
   }
-
-  /* el embed real de instagram en la vista de proyecto */
-  .proyecto-detalle .instagram-media { margin: 0 auto !important; }
 
   /* título que aparece solo al pasar el mouse sobre la pieza */
   .titulo-hover {
@@ -406,7 +400,6 @@
     .aviso-copiado, .carrusel-slide { transition: none; }
   }
 </style>
-<script async src="https://www.instagram.com/embed.js"></script>
 </head>
 <body>
 
@@ -633,6 +626,10 @@ const RUTAS = ["inicio", "trabajo", "acerca", "clientes", "encuentrame"];
 const PREFIJO_PROYECTO = "proyecto-";
 
 function crearSlug(t, i) {
+  // los tipos con id propio (vimeo) usan un slug estable basado en ese id,
+  // as\u00ed el link no se rompe si el t\u00edtulo se actualiza despu\u00e9s (ej: al
+  // llegar el t\u00edtulo real desde la API de vimeo)
+  if (t.id) return t.tipo + "-" + t.id;
   const base = (t.titulo || ("proyecto " + i))
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -663,16 +660,7 @@ function mostrarVista() {
 window.addEventListener("hashchange", mostrarVista);
 
 /* ---------- vista de proyecto individual ---------- */
-const TIPOS_CLICABLES = ["foto", "vimeo", "instagram"];
-
-function procesarEmbedsInstagram(intentos) {
-  if (intentos === undefined) intentos = 0;
-  if (window.instgrm && window.instgrm.Embeds) {
-    window.instgrm.Embeds.process();
-  } else if (intentos < 15) {
-    setTimeout(() => procesarEmbedsInstagram(intentos + 1), 300);
-  }
-}
+const TIPOS_CLICABLES = ["foto", "vimeo"];
 
 function mostrarProyecto(slug) {
   const indice = DATOS.trabajos.findIndex((t, i) => crearSlug(t, i) === slug);
@@ -699,11 +687,6 @@ function mostrarProyecto(slug) {
     iframe.title = t.titulo || "video";
     marco.appendChild(iframe);
     detalle.appendChild(marco);
-  } else if (t.tipo === "instagram") {
-    detalle.innerHTML =
-      '<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/p/' +
-      t.id + '/" data-instgrm-version="14"></blockquote>';
-    procesarEmbedsInstagram();
   }
 
   document.getElementById("proyectoTitulo").textContent = t.titulo || "";
@@ -782,10 +765,17 @@ carruselEl.addEventListener("touchend", e => {
 /* ---------- construir el mosaico de trabajos ---------- */
 const mosaico = document.getElementById("mosaico");
 DATOS.trabajos.forEach((t, i) => {
-  const esClicable = t.tipo === "foto" || t.tipo === "vimeo" || t.tipo === "instagram";
-  const pieza = document.createElement(esClicable ? "a" : "div");
+  const esInterno = TIPOS_CLICABLES.includes(t.tipo);
+  const esExterno = t.tipo === "instagram";
+  const pieza = document.createElement((esInterno || esExterno) ? "a" : "div");
   pieza.className = "pieza";
-  if (esClicable) pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
+  if (esInterno) {
+    pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
+  } else if (esExterno) {
+    pieza.href = "https://www.instagram.com/p/" + t.id + "/";
+    pieza.target = "_blank";
+    pieza.rel = "noopener";
+  }
 
   const marco = document.createElement("div");
   marco.className = "marco";
@@ -799,8 +789,23 @@ DATOS.trabajos.forEach((t, i) => {
   } else if (t.tipo === "vimeo") {
     const miniatura = document.createElement("div");
     miniatura.className = "miniatura-video";
-    miniatura.innerHTML = '<span class="triangulo-play"></span>';
+    miniatura.textContent = "video";
     marco.appendChild(miniatura);
+    fetch("https://vimeo.com/api/oembed.json?url=" + encodeURIComponent("https://vimeo.com/" + t.id))
+      .then(r => (r.ok ? r.json() : null))
+      .then(datos => {
+        if (!datos) return;
+        if (datos.thumbnail_url) {
+          miniatura.style.backgroundImage = "url('" + datos.thumbnail_url + "')";
+          miniatura.textContent = "";
+        }
+        if (datos.title) {
+          t.titulo = datos.title;
+          const cap = pieza.querySelector(".titulo-hover");
+          if (cap) cap.textContent = datos.title;
+        }
+      })
+      .catch(() => {});
   } else if (t.tipo === "instagram") {
     const miniatura = document.createElement("div");
     miniatura.className = "miniatura-instagram";
@@ -814,7 +819,7 @@ DATOS.trabajos.forEach((t, i) => {
   }
   pieza.appendChild(marco);
 
-  if (t.titulo && esClicable) {
+  if (t.titulo && (esInterno || esExterno)) {
     const cap = document.createElement("span");
     cap.className = "titulo-hover";
     cap.textContent = t.titulo;
