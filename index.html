@@ -322,7 +322,7 @@
     margin-bottom: 28px;
   }
   .clientes ul { list-style: none; }
-  .clientes li { line-height: 1.35; font-size: 300%; }
+  .clientes li { line-height: 1.35; font-size: 360%; }
 
   /* ============================================================
      VISTA: ENCUÉNTRAME — links directos
@@ -341,7 +341,7 @@
     background: none;
     border: none;
     font-family: 'Jost', Arial, Helvetica, sans-serif;
-    font-size: 16px;
+    font-size: 48px;
     text-transform: lowercase;
     color: inherit;
     cursor: pointer;
@@ -375,6 +375,15 @@
     header { padding: 20px 18px; }
     nav { right: 18px; top: 60px; }
     .carrusel-flecha { width: 24%; font-size: 34px; }
+
+    /* centra verticalmente el reproductor de video del detalle de
+       proyecto en el celular, para que no quede pegado arriba */
+    body.vista-proyecto-activa #proyectoDetalle {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -518,10 +527,10 @@ const DATOS = {
      ✏️ EDITA AQUÍ: fotos completas a pantalla completa que aparecen
      al entrar. copia y pega bloques para agregar o quitar. */
   portada: [
+    { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
     { src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
     { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
     { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
-    { src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
     { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
   ],
 
@@ -721,25 +730,36 @@ function irASlide(i) {
 }
 if (DATOS.portada.length) carruselTitulo.textContent = DATOS.portada[0].titulo || "";
 
+/* avanza sola cada 45s; cualquier navegación manual reinicia el conteo */
+let carruselAuto = null;
+function reiniciarAutoAvance() {
+  if (carruselAuto) clearInterval(carruselAuto);
+  carruselAuto = setInterval(() => irASlide(carrusel.indice + 1), 45000);
+}
+reiniciarAutoAvance();
+
 const carruselEl = document.getElementById("carrusel");
 document.getElementById("flechaDer").addEventListener("click", e => {
   e.stopPropagation();
   irASlide(carrusel.indice + 1);
+  reiniciarAutoAvance();
 });
 document.getElementById("flechaIzq").addEventListener("click", e => {
   e.stopPropagation();
   irASlide(carrusel.indice - 1);
+  reiniciarAutoAvance();
 });
 carruselEl.addEventListener("click", e => {
   const rect = carruselEl.getBoundingClientRect();
   const x = e.clientX - rect.left;
   x < rect.width / 2 ? irASlide(carrusel.indice - 1) : irASlide(carrusel.indice + 1);
+  reiniciarAutoAvance();
 });
 
 document.addEventListener("keydown", e => {
   if (!document.body.classList.contains("vista-inicio-activa")) return;
-  if (e.key === "ArrowRight") irASlide(carrusel.indice + 1);
-  if (e.key === "ArrowLeft") irASlide(carrusel.indice - 1);
+  if (e.key === "ArrowRight") { irASlide(carrusel.indice + 1); reiniciarAutoAvance(); }
+  if (e.key === "ArrowLeft") { irASlide(carrusel.indice - 1); reiniciarAutoAvance(); }
 });
 
 let toqueInicioX = null;
@@ -747,7 +767,10 @@ carruselEl.addEventListener("touchstart", e => { toqueInicioX = e.touches[0].cli
 carruselEl.addEventListener("touchend", e => {
   if (toqueInicioX === null) return;
   const dx = e.changedTouches[0].clientX - toqueInicioX;
-  if (Math.abs(dx) > 40) dx < 0 ? irASlide(carrusel.indice + 1) : irASlide(carrusel.indice - 1);
+  if (Math.abs(dx) > 40) {
+    dx < 0 ? irASlide(carrusel.indice + 1) : irASlide(carrusel.indice - 1);
+    reiniciarAutoAvance();
+  }
   toqueInicioX = null;
 });
 
