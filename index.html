@@ -216,31 +216,16 @@
     border: 0;
   }
 
-  /* miniatura de video dentro de la grilla (imagen real del video, el video se ve al entrar al proyecto).
-     si vimeo no entrega miniatura (video restringido por dominio) queda esta caja con el texto "video". */
+  /* miniatura de video dentro de la grilla: imagen real en hd, agrandada
+     un poco para recortar cualquier borde negro del propio video (letterbox)
+     y que quede igual de "llena" que las fotos */
   .miniatura-video {
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #111;
-    background-size: cover;
-    background-position: center;
-    color: #666;
-    font-size: 13px;
-  }
-
-  /* miniatura de publicación de instagram dentro de la grilla (abre instagram directo) */
-  .miniatura-instagram {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    object-fit: cover;
+    display: block;
     background: #111;
-    color: #666;
-    font-size: 13px;
+    transform: scale(1.3);
   }
 
   /* título que aparece solo al pasar el mouse sobre la pieza */
@@ -550,12 +535,9 @@ const DATOS = {
      FOTO:
        { tipo: "foto", src: "fotos/nombre.jpg", titulo: "nombre del proyecto" }
 
-     VIDEO DE VIMEO (usa solo el número del video, ej: vimeo.com/123456789):
+     VIDEO DE VIMEO (usa solo el número del video, ej: vimeo.com/123456789).
+     la miniatura y el título se traen solos desde vimeo:
        { tipo: "vimeo", id: "123456789", titulo: "nombre del proyecto" }
-
-     PUBLICACIÓN DE INSTAGRAM (usa solo el código, el que aparece
-     después de /p/ en el link, ej: instagram.com/p/ABC123xyz/):
-       { tipo: "instagram", id: "ABC123xyz", titulo: "nombre del proyecto" }
 
      PENDIENTE (marcador de posición mientras no hay material):
        { tipo: "pendiente", titulo: "nombre del proyecto" }
@@ -565,34 +547,24 @@ const DATOS = {
      última fila quede siempre completa y no se vea un espacio vacío,
      conviene que el total de piezas sea múltiplo de 6. */
   trabajos: [
+    // fotos y videos intercalados. los 4 videos de vimeo con restricción de
+    // dominio y las publicaciones de instagram se sacaron porque no traían
+    // miniatura propia.
+    { tipo: "vimeo", id: "770805630", titulo: "soprole - mantequilla / coika" },
     { tipo: "foto", src: "fotos/mariscos.jpg", titulo: "mariscos variados" },
+    { tipo: "vimeo", id: "770805118", titulo: "super pollo - congelados / coika" },
     { tipo: "foto", src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
+    { tipo: "vimeo", id: "755689126", titulo: "la crianza / plant based / dyu / nico stein" },
     { tipo: "foto", src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
+    { tipo: "vimeo", id: "707877248", titulo: "watts - mermeladas / porta / coika" },
     { tipo: "foto", src: "fotos/ensalada-verde.jpg", titulo: "ensalada verde" },
+    { tipo: "vimeo", id: "291187340", titulo: "tottus chiloé" },
     { tipo: "foto", src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
-
-    // ✏️ EDITA AQUÍ: reemplaza estos títulos genéricos por el nombre real de cada comercial
-    { tipo: "vimeo", id: "770805630", titulo: "comercial 01" },
-    { tipo: "vimeo", id: "770805118", titulo: "comercial 02" },
-    { tipo: "vimeo", id: "755689126", titulo: "comercial 03" },
-    { tipo: "vimeo", id: "707877248", titulo: "comercial 04" },
-    { tipo: "vimeo", id: "291187340", titulo: "comercial 05" },
-    { tipo: "vimeo", id: "291186871", titulo: "comercial 06" },
-    { tipo: "vimeo", id: "268395021", titulo: "comercial 07" },
-    { tipo: "vimeo", id: "246134390", titulo: "comercial 08" },
-    { tipo: "vimeo", id: "246134271", titulo: "comercial 09" },
-    { tipo: "vimeo", id: "192005085", titulo: "comercial 10" },
-    { tipo: "vimeo", id: "558255192", titulo: "comercial 11" },
-    { tipo: "vimeo", id: "558254714", titulo: "comercial 12" },
-    { tipo: "vimeo", id: "558254564", titulo: "comercial 13" },
-    { tipo: "vimeo", id: "558254444", titulo: "comercial 14" },
-
-    { tipo: "instagram", id: "DXHq81HR2Ax", titulo: "publicación 01" },
-    { tipo: "instagram", id: "DXHrzrrxL9A", titulo: "publicación 02" },
-    { tipo: "instagram", id: "DXHrMFslLr8", titulo: "publicación 03" },
-    { tipo: "instagram", id: "DXHsI9lx08a", titulo: "publicación 04" },
-
-    { tipo: "pendiente", titulo: "próximo proyecto" },
+    { tipo: "vimeo", id: "291186871", titulo: "supercerdo descubridores" },
+    { tipo: "vimeo", id: "268395021", titulo: "fuchs multigrano" },
+    { tipo: "vimeo", id: "246134390", titulo: "tottus carnes" },
+    { tipo: "vimeo", id: "246134271", titulo: "carozzi quinoa" },
+    { tipo: "vimeo", id: "192005085", titulo: "supercerdo" },
 
     // ejemplo para agregar un video de vimeo:
     // { tipo: "vimeo", id: "123456789", titulo: "comercial marca" },
@@ -765,17 +737,10 @@ carruselEl.addEventListener("touchend", e => {
 /* ---------- construir el mosaico de trabajos ---------- */
 const mosaico = document.getElementById("mosaico");
 DATOS.trabajos.forEach((t, i) => {
-  const esInterno = TIPOS_CLICABLES.includes(t.tipo);
-  const esExterno = t.tipo === "instagram";
-  const pieza = document.createElement((esInterno || esExterno) ? "a" : "div");
+  const esClicable = TIPOS_CLICABLES.includes(t.tipo);
+  const pieza = document.createElement(esClicable ? "a" : "div");
   pieza.className = "pieza";
-  if (esInterno) {
-    pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
-  } else if (esExterno) {
-    pieza.href = "https://www.instagram.com/p/" + t.id + "/";
-    pieza.target = "_blank";
-    pieza.rel = "noopener";
-  }
+  if (esClicable) pieza.href = "#" + PREFIJO_PROYECTO + crearSlug(t, i);
 
   const marco = document.createElement("div");
   marco.className = "marco";
@@ -787,30 +752,24 @@ DATOS.trabajos.forEach((t, i) => {
     img.loading = "lazy";
     marco.appendChild(img);
   } else if (t.tipo === "vimeo") {
-    const miniatura = document.createElement("div");
+    const miniatura = document.createElement("img");
     miniatura.className = "miniatura-video";
-    miniatura.textContent = "video";
+    miniatura.alt = t.titulo || "";
+    miniatura.loading = "lazy";
     marco.appendChild(miniatura);
-    fetch("https://vimeo.com/api/oembed.json?url=" + encodeURIComponent("https://vimeo.com/" + t.id))
+    fetch("https://vimeo.com/api/oembed.json?url=" + encodeURIComponent("https://vimeo.com/" + t.id) + "&width=960")
       .then(r => (r.ok ? r.json() : null))
       .then(datos => {
         if (!datos) return;
-        if (datos.thumbnail_url) {
-          miniatura.style.backgroundImage = "url('" + datos.thumbnail_url + "')";
-          miniatura.textContent = "";
-        }
+        if (datos.thumbnail_url) miniatura.src = datos.thumbnail_url;
         if (datos.title) {
           t.titulo = datos.title;
+          miniatura.alt = datos.title;
           const cap = pieza.querySelector(".titulo-hover");
           if (cap) cap.textContent = datos.title;
         }
       })
       .catch(() => {});
-  } else if (t.tipo === "instagram") {
-    const miniatura = document.createElement("div");
-    miniatura.className = "miniatura-instagram";
-    miniatura.textContent = "instagram";
-    marco.appendChild(miniatura);
   } else {
     const ph = document.createElement("div");
     ph.className = "placeholder";
@@ -819,7 +778,7 @@ DATOS.trabajos.forEach((t, i) => {
   }
   pieza.appendChild(marco);
 
-  if (t.titulo && (esInterno || esExterno)) {
+  if (t.titulo && esClicable) {
     const cap = document.createElement("span");
     cap.className = "titulo-hover";
     cap.textContent = t.titulo;
