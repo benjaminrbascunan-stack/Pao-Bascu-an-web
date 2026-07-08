@@ -536,6 +536,8 @@ const DATOS = {
     { src: "fotos/salmon-costra.jpg", titulo: "salmón con costra de hierbas" },
     { src: "fotos/zanahorias-asadas.jpg", titulo: "zanahorias asadas con arándanos" },
     { src: "fotos/chandelle-chocolate.jpg", titulo: "chandelle sabor chocolate" },
+    { src: "fotos/colun-postres-03.jpg", titulo: "colun postres — chocolate" },
+    { src: "fotos/colun-postres-07.jpg", titulo: "colun postres — caramelo" },
   ],
 
   /* ---------- TRABAJOS (el mosaico) ----------
@@ -548,6 +550,12 @@ const DATOS = {
      VIDEO DE VIMEO (usa solo el número del video, ej: vimeo.com/123456789).
      la miniatura y el título se traen solos desde vimeo:
        { tipo: "vimeo", id: "123456789", titulo: "nombre del proyecto" }
+
+     GALERÍA (varias fotos de un mismo proyecto, ej: un trabajo de behance.
+     la miniatura de la grilla usa "src"; al hacer click se abren todas
+     las fotos de "imgs" en la ventana del proyecto):
+       { tipo: "galeria", id: "slug-unico", src: "fotos/miniatura.jpg",
+         titulo: "nombre del proyecto", imgs: ["fotos/1.jpg", "fotos/2.jpg"] }
 
      PENDIENTE (marcador de posición mientras no hay material):
        { tipo: "pendiente", titulo: "nombre del proyecto" }
@@ -593,6 +601,18 @@ const DATOS = {
     { tipo: "vimeo", id: "136512139", titulo: "banquete estado natural" },
     { tipo: "vimeo", id: "110937864", titulo: "colun lasaña" },
     { tipo: "vimeo", id: "110933837", titulo: "colun sándwich" },
+
+    {
+      tipo: "galeria", id: "colun-postres", titulo: "colun postres",
+      src: "fotos/colun-postres-04.jpg",
+      imgs: [
+        "fotos/colun-postres-01.jpg", "fotos/colun-postres-02.jpg",
+        "fotos/colun-postres-03.jpg", "fotos/colun-postres-04.jpg",
+        "fotos/colun-postres-05.jpg", "fotos/colun-postres-06.jpg",
+        "fotos/colun-postres-07.jpg", "fotos/colun-postres-08.jpg",
+        "fotos/colun-postres-09.jpg", "fotos/colun-postres-10.jpg",
+      ],
+    },
 
     // ejemplo para agregar un video de vimeo:
     // { tipo: "vimeo", id: "123456789", titulo: "comercial marca" },
@@ -662,7 +682,7 @@ function mostrarVista() {
 window.addEventListener("hashchange", mostrarVista);
 
 /* ---------- vista de proyecto individual ---------- */
-const TIPOS_CLICABLES = ["foto", "vimeo"];
+const TIPOS_CLICABLES = ["foto", "vimeo", "galeria"];
 
 function mostrarProyecto(slug) {
   const indice = DATOS.trabajos.findIndex((t, i) => crearSlug(t, i) === slug);
@@ -689,6 +709,13 @@ function mostrarProyecto(slug) {
     iframe.title = t.titulo || "video";
     marco.appendChild(iframe);
     detalle.appendChild(marco);
+  } else if (t.tipo === "galeria") {
+    (t.imgs || []).forEach(src => {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = t.titulo || "";
+      detalle.appendChild(img);
+    });
   }
 
   document.getElementById("proyectoTitulo").textContent = t.titulo || "";
@@ -789,7 +816,7 @@ DATOS.trabajos.forEach((t, i) => {
   const marco = document.createElement("div");
   marco.className = "marco";
 
-  if (t.tipo === "foto") {
+  if (t.tipo === "foto" || t.tipo === "galeria") {
     const img = document.createElement("img");
     img.src = t.src;
     img.alt = t.titulo || "";
